@@ -266,13 +266,17 @@ export function AddExpenseDialog({
                 <SelectValue placeholder="Select who paid" />
               </SelectTrigger>
               <SelectContent>
-                {members.map((member) => (
-                  <SelectItem key={member.user_id} value={member.user_id}>
-                    {member.profiles?.display_name ||
-                      member.profiles?.email ||
-                      "Unknown"}
-                  </SelectItem>
-                ))}
+                {members.map((member) => {
+                  console.log("Member data:", member);
+                  const displayName = member.profiles?.display_name || 
+                                     member.profiles?.email || 
+                                     member.user_id.slice(0, 8);
+                  return (
+                    <SelectItem key={member.user_id} value={member.user_id}>
+                      {displayName}
+                    </SelectItem>
+                  );
+                })}
               </SelectContent>
             </Select>
           </div>
@@ -305,15 +309,16 @@ export function AddExpenseDialog({
               <div className="space-y-2">
                 {members.map((member) => {
                   const split = splits.find((s) => s.userId === member.user_id);
+                  const displayName = member.profiles?.display_name || 
+                                     member.profiles?.email || 
+                                     member.user_id.slice(0, 8);
                   return (
                     <div
                       key={member.user_id}
                       className="flex items-center gap-3"
                     >
                       <Label className="flex-1 text-sm">
-                        {member.profiles?.display_name ||
-                          member.profiles?.email ||
-                          "Unknown"}
+                        {displayName}
                       </Label>
                       <Input
                         type="number"
