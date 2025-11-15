@@ -12,17 +12,21 @@ const Auth = () => {
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
+    // Get return URL from query params
+    const params = new URLSearchParams(window.location.search);
+    const returnUrl = params.get("returnUrl") || "/";
+
     // Check if user is already logged in
     supabase.auth.getSession().then(({ data: { session } }) => {
       if (session) {
-        navigate("/");
+        navigate(returnUrl);
       }
     });
 
     // Listen for auth state changes
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
       if (session) {
-        navigate("/");
+        navigate(returnUrl);
       }
     });
 
@@ -32,10 +36,13 @@ const Auth = () => {
   const handleGoogleSignIn = async () => {
     try {
       setLoading(true);
+      const params = new URLSearchParams(window.location.search);
+      const returnUrl = params.get("returnUrl") || "/";
+      
       const { error } = await supabase.auth.signInWithOAuth({
         provider: "google",
         options: {
-          redirectTo: `${window.location.origin}/`,
+          redirectTo: `${window.location.origin}${returnUrl}`,
         },
       });
 

@@ -30,7 +30,7 @@ const handler = async (req: Request): Promise<Response> => {
     }
 
     const appUrl = Deno.env.get("SUPABASE_URL")?.replace(".supabase.co", ".lovable.app") || "https://yourapp.lovable.app";
-    const inviteLink = `${appUrl}/groups/${groupId}`;
+    const inviteLink = `${appUrl}/group/${groupId}`;
 
     const emailPayload = {
       from: "Expense Tracker <onboarding@resend.dev>",
