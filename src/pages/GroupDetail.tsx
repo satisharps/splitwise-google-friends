@@ -143,29 +143,39 @@ const GroupDetail = () => {
 
       if (expensesError) throw expensesError;
 
-      // Fetch related data separately
+      // Fetch related data separately (avoiding nested profile queries that hit RLS)
       const expensesWithDetails = await Promise.all(
         (expensesData || []).map(async (expense) => {
-          const [payerResult, splitsResult] = await Promise.all([
-            supabase
-              .from("profiles")
-              .select("display_name, email")
-              .eq("user_id", expense.paid_by)
-              .single(),
-            supabase
-              .from("expense_splits")
-              .select(`
-                user_id,
-                amount,
-                profiles(display_name, email)
-              `)
-              .eq("expense_id", expense.id),
-          ]);
+          // Fetch splits without nested profiles
+          const { data: splitsData } = await supabase
+            .from("expense_splits")
+            .select("user_id, amount")
+            .eq("expense_id", expense.id);
+
+          // Get all unique user IDs from payer and splits
+          const userIds = Array.from(new Set([
+            expense.paid_by,
+            ...(splitsData || []).map((s: any) => s.user_id),
+          ]));
+
+          // Fetch profiles separately
+          const { data: profilesData } = await supabase
+            .from("profiles")
+            .select("user_id, display_name, email")
+            .in("user_id", userIds);
+
+          const profileMap = new Map((profilesData || []).map((p: any) => [p.user_id, p]));
+
+          // Attach profiles to splits
+          const expense_splits = (splitsData || []).map((split: any) => ({
+            ...split,
+            profiles: profileMap.get(split.user_id) || null,
+          }));
 
           return {
             ...expense,
-            payer_profile: payerResult.data,
-            expense_splits: splitsResult.data || [],
+            payer_profile: profileMap.get(expense.paid_by) || null,
+            expense_splits,
           };
         })
       );
