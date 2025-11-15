@@ -94,6 +94,7 @@ const GroupDetail = () => {
     setInviting(true);
 
     try {
+      // Insert invitation into database
       const { error } = await supabase
         .from("group_invitations")
         .insert({
@@ -109,10 +110,29 @@ const GroupDetail = () => {
         throw error;
       }
 
-      toast({
-        title: "Invitation sent!",
-        description: `Invitation sent to ${inviteEmail}`,
+      // Send invitation email
+      const { error: emailError } = await supabase.functions.invoke("send-invitation", {
+        body: {
+          email: inviteEmail.toLowerCase(),
+          groupName: group?.name || "Expense Group",
+          inviterName: user.email || "A member",
+          groupId: groupId,
+        },
       });
+
+      if (emailError) {
+        console.error("Error sending email:", emailError);
+        toast({
+          title: "Invitation created",
+          description: "Invitation saved but email sending failed. Please try again.",
+          variant: "destructive",
+        });
+      } else {
+        toast({
+          title: "Invitation sent!",
+          description: `Invitation email sent to ${inviteEmail}`,
+        });
+      }
 
       setInviteEmail("");
       fetchGroupData();
