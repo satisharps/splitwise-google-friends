@@ -271,8 +271,8 @@ const GroupDetail = () => {
           <span className="text-sm md:text-base">Back to Groups</span>
         </Button>
 
-        <div className="grid gap-4 md:gap-6 lg:grid-cols-3">
-          <div className="lg:col-span-2 space-y-4 md:space-y-6">
+        <div className="space-y-4 md:space-y-6 max-w-4xl mx-auto">
+          <div className="space-y-4 md:space-y-6">
             {accepting && (
               <Card className="shadow-card border-primary/20 border-2">
                 <CardContent className="pt-4 md:pt-6 p-4 md:p-6">
@@ -304,34 +304,65 @@ const GroupDetail = () => {
             </Card>
 
             <Card className="shadow-card border-border/50">
-              <CardHeader className="p-4 md:p-6 pb-3 md:pb-6">
-                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-                  <CardTitle className="flex items-center gap-2 text-lg sm:text-xl">
-                    <Users className="h-4 w-4 sm:h-5 sm:w-5" />
-                    Members
-                  </CardTitle>
-                  <AddExpenseDialog
-                    groupId={groupId!}
-                    members={members}
-                    onExpenseAdded={fetchExpenses}
-                  />
-                </div>
+              <CardHeader className="p-4 md:p-6 pb-4 md:pb-6">
+                <CardTitle className="flex items-center gap-2 text-base sm:text-lg mb-0">
+                  <Link2 className="h-4 w-4 sm:h-5 sm:w-5" />
+                  Invite Link
+                </CardTitle>
               </CardHeader>
               <CardContent className="p-4 md:p-6 pt-0">
+                <div className="space-y-2.5 md:space-y-3">
+                  <div className="flex items-center gap-2 p-2.5 md:p-3 rounded-lg bg-accent/30 border border-border/50">
+                    <Link2 className="h-3.5 w-3.5 md:h-4 md:w-4 text-muted-foreground flex-shrink-0" />
+                    <code className="flex-1 text-[11px] sm:text-xs truncate text-muted-foreground leading-relaxed">
+                      {window.location.origin}/group/{groupId}
+                    </code>
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="sm"
+                      onClick={handleCopyInviteLink}
+                      className="flex-shrink-0 h-7 w-7 md:h-8 md:w-8 p-0 hover:bg-accent"
+                    >
+                      <Copy className="h-3.5 w-3.5 md:h-4 md:w-4" />
+                    </Button>
+                  </div>
+                  <p className="text-[11px] sm:text-xs text-muted-foreground text-center leading-relaxed">
+                    Share this link with friends to invite them
+                  </p>
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card className="shadow-card border-border/50">
+              <CardHeader className="p-4 md:p-6 pb-0">
+                <div className="flex items-center justify-between mb-4">
+                  <CardTitle className="flex items-center gap-2 text-base sm:text-lg">
+                    <Users className="h-4 w-4 sm:h-5 sm:w-5" />
+                    Members ({members.length})
+                  </CardTitle>
+                </div>
+                <AddExpenseDialog
+                  groupId={groupId!}
+                  members={members}
+                  onExpenseAdded={fetchExpenses}
+                />
+              </CardHeader>
+              <CardContent className="p-4 md:p-6 pt-3">
                 {members.length === 0 ? (
-                  <p className="text-muted-foreground text-xs md:text-sm">No members yet</p>
+                  <p className="text-muted-foreground text-xs md:text-sm text-center py-4">No members yet</p>
                 ) : (
-                  <div className="space-y-2 md:space-y-3">
+                  <div className="space-y-2 md:space-y-2.5">
                     {members.map((member) => (
-                      <div key={member.id} className="flex items-center gap-2 md:gap-3 p-2.5 md:p-3 rounded-lg bg-accent/50">
+                      <div key={member.id} className="flex items-center gap-2.5 md:gap-3 p-2.5 md:p-3 rounded-lg bg-accent/50">
                         <div className="w-9 h-9 md:w-10 md:h-10 rounded-full bg-primary/10 flex items-center justify-center text-primary font-medium text-sm md:text-base shrink-0">
                           {member.profiles?.email?.charAt(0).toUpperCase()}
                         </div>
                         <div className="flex-1 min-w-0">
-                          <p className="text-sm md:text-base font-medium truncate">
+                          <p className="text-sm md:text-base font-medium truncate leading-tight">
                             {member.profiles?.full_name || member.profiles?.email}
                           </p>
-                          <p className="text-xs md:text-sm text-muted-foreground truncate">
+                          <p className="text-xs md:text-sm text-muted-foreground truncate leading-tight mt-0.5">
                             {member.profiles?.email}
                           </p>
                         </div>
@@ -344,49 +375,13 @@ const GroupDetail = () => {
 
             <Card className="shadow-card border-border/50">
               <CardHeader className="p-4 md:p-6 pb-3 md:pb-6">
-                <CardTitle className="text-lg sm:text-xl">Expenses</CardTitle>
-                <CardDescription className="text-xs md:text-sm">
+                <CardTitle className="text-base sm:text-lg">Expenses</CardTitle>
+                <CardDescription className="text-xs md:text-sm mt-1">
                   Track and split expenses with your group
                 </CardDescription>
               </CardHeader>
               <CardContent className="p-4 md:p-6 pt-0">
                 <ExpenseList expenses={expenses} currency={group?.currency || "USD"} />
-              </CardContent>
-            </Card>
-          </div>
-
-          <div className="space-y-4 md:space-y-6">
-            <Card className="shadow-card border-border/50">
-              <CardHeader className="p-4 md:p-6 pb-3 md:pb-6">
-                <CardTitle className="flex items-center gap-2 text-lg sm:text-xl">
-                  <Link2 className="h-4 w-4 sm:h-5 sm:w-5" />
-                  Invite Friends
-                </CardTitle>
-                <CardDescription className="text-xs md:text-sm">
-                  Share the link to invite friends
-                </CardDescription>
-              </CardHeader>
-              <CardContent className="p-4 md:p-6 pt-0">
-                <div className="space-y-3 md:space-y-4">
-                  <div className="flex items-center gap-2 p-2 md:p-3 rounded-lg bg-accent/30 border border-border/50">
-                    <Link2 className="h-3.5 w-3.5 md:h-4 md:w-4 text-muted-foreground flex-shrink-0" />
-                    <code className="flex-1 text-xs sm:text-sm truncate text-muted-foreground">
-                      {window.location.origin}/group/{groupId}
-                    </code>
-                    <Button
-                      type="button"
-                      variant="ghost"
-                      size="sm"
-                      onClick={handleCopyInviteLink}
-                      className="flex-shrink-0 h-7 w-7 md:h-8 md:w-8 p-0"
-                    >
-                      <Copy className="h-3.5 w-3.5 md:h-4 md:w-4" />
-                    </Button>
-                  </div>
-                  <p className="text-xs text-muted-foreground text-center">
-                    Anyone with this link can join the group
-                  </p>
-                </div>
               </CardContent>
             </Card>
           </div>
