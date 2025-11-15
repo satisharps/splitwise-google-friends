@@ -61,8 +61,8 @@ const Auth = () => {
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-background via-accent/20 to-background p-4">
       <Card className="w-full max-w-md shadow-card border-border/50">
-        <CardHeader className="space-y-3 text-center">
-          <div className="w-16 h-16 mx-auto bg-gradient-to-br from-primary to-primary/60 rounded-2xl flex items-center justify-center mb-2">
+        <CardHeader className="space-y-2 md:space-y-3 text-center p-4 md:p-6">
+          <div className="w-14 h-14 md:w-16 md:h-16 mx-auto bg-gradient-to-br from-primary to-primary/60 rounded-2xl flex items-center justify-center mb-2">
             <svg
               xmlns="http://www.w3.org/2000/svg"
               viewBox="0 0 24 24"
@@ -71,26 +71,26 @@ const Auth = () => {
               strokeWidth="2"
               strokeLinecap="round"
               strokeLinejoin="round"
-              className="w-8 h-8 text-primary-foreground"
+              className="w-7 h-7 md:w-8 md:h-8 text-primary-foreground"
             >
               <circle cx="12" cy="12" r="10" />
               <path d="M16 8h-6a2 2 0 1 0 0 4h4a2 2 0 1 1 0 4H8" />
               <path d="M12 18V6" />
             </svg>
           </div>
-          <CardTitle className="text-3xl font-bold bg-gradient-to-r from-primary to-primary/70 bg-clip-text text-transparent">
+          <CardTitle className="text-2xl md:text-3xl font-bold bg-gradient-to-r from-primary to-primary/70 bg-clip-text text-transparent">
             SplitEase
           </CardTitle>
-          <CardDescription className="text-base">
+          <CardDescription className="text-sm md:text-base">
             Split expenses with friends, track who owes what, and settle up easily
           </CardDescription>
         </CardHeader>
-        <CardContent className="space-y-4">
+        <CardContent className="space-y-3 md:space-y-4 p-4 md:p-6">
           <Button
             onClick={handleGoogleSignIn}
             disabled={loading}
             size="lg"
-            className="w-full bg-primary hover:bg-primary/90 text-primary-foreground font-medium transition-all duration-200"
+            className="w-full bg-primary hover:bg-primary/90 text-primary-foreground font-medium transition-all duration-200 text-sm md:text-base"
           >
             {loading ? (
               <>

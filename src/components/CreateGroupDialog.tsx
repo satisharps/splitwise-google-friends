@@ -81,19 +81,19 @@ const CreateGroupDialog = ({ onGroupCreated }: CreateGroupDialogProps) => {
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        <Button size="lg" className="bg-primary hover:bg-primary/90 text-primary-foreground shadow-soft">
-          <Plus className="mr-2 h-5 w-5" />
-          Create Group
+        <Button size="default" className="w-full sm:w-auto bg-primary hover:bg-primary/90 text-primary-foreground shadow-soft">
+          <Plus className="mr-2 h-4 w-4 md:h-5 md:w-5" />
+          <span className="text-sm md:text-base">Create Group</span>
         </Button>
       </DialogTrigger>
-      <DialogContent className="sm:max-w-[425px]">
-        <DialogHeader>
-          <DialogTitle>Create Expense Group</DialogTitle>
-          <DialogDescription>
+      <DialogContent className="sm:max-w-[425px] mx-4">
+        <DialogHeader className="pb-2">
+          <DialogTitle className="text-lg md:text-xl">Create Expense Group</DialogTitle>
+          <DialogDescription className="text-sm">
             Set up a new group to split expenses with your friends
           </DialogDescription>
         </DialogHeader>
-        <form onSubmit={handleSubmit} className="space-y-4 mt-4">
+        <form onSubmit={handleSubmit} className="space-y-3 md:space-y-4 mt-2 md:mt-4">
           <div className="space-y-2">
             <Label htmlFor="groupName">Group Name</Label>
             <Input
@@ -119,16 +119,17 @@ const CreateGroupDialog = ({ onGroupCreated }: CreateGroupDialogProps) => {
               </SelectContent>
             </Select>
           </div>
-          <div className="flex justify-end gap-3 pt-4">
+          <div className="flex flex-col-reverse sm:flex-row gap-2 sm:gap-3 pt-4">
             <Button
               type="button"
               variant="outline"
               onClick={() => setOpen(false)}
               disabled={loading}
+              className="w-full sm:w-auto"
             >
               Cancel
             </Button>
-            <Button type="submit" disabled={loading}>
+            <Button type="submit" disabled={loading} className="w-full sm:w-auto text-sm md:text-base">
               {loading ? (
                 <>
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
