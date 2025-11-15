@@ -245,6 +245,9 @@ const GroupDetail = () => {
                       onChange={(e) => setInviteEmail(e.target.value)}
                       disabled={inviting}
                     />
+                    <p className="text-sm text-muted-foreground">
+                      Your friend will receive an invitation email. Ask them to accept the request to view group details.
+                    </p>
                   </div>
                   <Button
                     type="submit"
@@ -270,6 +273,9 @@ const GroupDetail = () => {
             <Card className="shadow-card border-border/50">
               <CardHeader>
                 <CardTitle>Pending Invitations</CardTitle>
+                <CardDescription>
+                  Friends invited who need to accept to view group details
+                </CardDescription>
               </CardHeader>
               <CardContent>
                 {invitations.filter(inv => inv.status === 'pending').length === 0 ? (
@@ -284,7 +290,7 @@ const GroupDetail = () => {
                           className="flex items-center gap-2 p-2 rounded-md bg-accent/30 text-sm"
                         >
                           <Mail className="h-4 w-4 text-muted-foreground flex-shrink-0" />
-                          <span className="truncate">{invitation.email}</span>
+                          <span className="truncate">{invitation.invited_email}</span>
                         </div>
                       ))}
                   </div>
