@@ -98,7 +98,7 @@ const GroupDetail = () => {
         .from("group_invitations")
         .insert({
           group_id: groupId,
-          email: inviteEmail.toLowerCase(),
+          invited_email: inviteEmail.toLowerCase(),
           invited_by: user.id,
         });
 
