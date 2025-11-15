@@ -34,7 +34,7 @@ const GroupDetail = () => {
     });
   }, [navigate, groupId]);
 
-  const fetchGroupData = async () => {
+  const fetchGroupData = async (isRetry = false) => {
     try {
       setLoading(true);
       
@@ -47,7 +47,31 @@ const GroupDetail = () => {
           .eq("group_id", groupId),
       ]);
 
-      if (groupResult.error) throw groupResult.error;
+      if (groupResult.error) {
+        // If user can't view the group, automatically add them as a member
+        if (groupResult.error.code === 'PGRST116' && !isRetry && user?.id) {
+          try {
+            const { error: memberError } = await supabase
+              .from("group_members")
+              .insert({
+                group_id: groupId,
+                user_id: user.id,
+              });
+
+            if (!memberError) {
+              toast({
+                title: "Welcome to the group!",
+                description: "You've been added to this group",
+              });
+              // Retry fetching with the new membership
+              return fetchGroupData(true);
+            }
+          } catch (addError) {
+            console.error("Error adding user to group:", addError);
+          }
+        }
+        throw groupResult.error;
+      }
       
       setGroup(groupResult.data);
       setInvitations(invitationsResult.data || []);
@@ -237,18 +261,18 @@ const GroupDetail = () => {
   return (
     <div className="min-h-screen bg-gradient-to-br from-background via-accent/10 to-background">
       <Header user={user} />
-      <main className="container py-8">
+      <main className="container py-4 px-4 md:py-8 md:px-6">
         <Button
           variant="ghost"
           onClick={() => navigate("/")}
-          className="mb-6"
+          className="mb-4 md:mb-6"
         >
           <ArrowLeft className="mr-2 h-4 w-4" />
           Back to Groups
         </Button>
 
-        <div className="grid gap-6 lg:grid-cols-3">
-          <div className="lg:col-span-2 space-y-6">
+        <div className="grid gap-4 md:gap-6 lg:grid-cols-3">
+          <div className="lg:col-span-2 space-y-4 md:space-y-6">
             {accepting && (
               <Card className="shadow-card border-primary/20 border-2">
                 <CardContent className="pt-6">
@@ -265,14 +289,14 @@ const GroupDetail = () => {
 
             <Card className="shadow-card border-border/50">
               <CardHeader>
-                <div className="flex items-start justify-between">
-                  <div>
-                    <CardTitle className="text-2xl">{group?.name}</CardTitle>
+                <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3">
+                  <div className="flex-1 min-w-0">
+                    <CardTitle className="text-xl sm:text-2xl truncate">{group?.name}</CardTitle>
                     <CardDescription className="mt-1">
                       Created {new Date(group?.created_at).toLocaleDateString()}
                     </CardDescription>
                   </div>
-                  <Badge variant="secondary" className="text-base px-3 py-1">
+                  <Badge variant="secondary" className="text-sm sm:text-base px-3 py-1 w-fit">
                     {group?.currency}
                   </Badge>
                 </div>
@@ -281,9 +305,9 @@ const GroupDetail = () => {
 
             <Card className="shadow-card border-border/50">
               <CardHeader>
-                <div className="flex items-center justify-between">
-                  <CardTitle className="flex items-center gap-2">
-                    <Users className="h-5 w-5" />
+                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+                  <CardTitle className="flex items-center gap-2 text-lg sm:text-xl">
+                    <Users className="h-4 w-4 sm:h-5 sm:w-5" />
                     Members
                   </CardTitle>
                   <AddExpenseDialog
@@ -331,22 +355,22 @@ const GroupDetail = () => {
             </Card>
           </div>
 
-          <div className="space-y-6">
+          <div className="space-y-4 md:space-y-6">
             <Card className="shadow-card border-border/50">
               <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <Link2 className="h-5 w-5" />
+                <CardTitle className="flex items-center gap-2 text-lg sm:text-xl">
+                  <Link2 className="h-4 w-4 sm:h-5 sm:w-5" />
                   Invite Friends
                 </CardTitle>
                 <CardDescription>
-                  Send an invitation via email or share the link
+                  Share the link to invite friends
                 </CardDescription>
               </CardHeader>
               <CardContent>
-                <div className="space-y-4">
-                  <div className="flex items-center gap-2 p-3 rounded-lg bg-accent/30 border border-border/50">
+                <div className="space-y-3 md:space-y-4">
+                  <div className="flex items-center gap-2 p-2 md:p-3 rounded-lg bg-accent/30 border border-border/50">
                     <Link2 className="h-4 w-4 text-muted-foreground flex-shrink-0" />
-                    <code className="flex-1 text-sm truncate text-muted-foreground">
+                    <code className="flex-1 text-xs sm:text-sm truncate text-muted-foreground">
                       {window.location.origin}/group/{groupId}
                     </code>
                     <Button
@@ -354,7 +378,7 @@ const GroupDetail = () => {
                       variant="ghost"
                       size="sm"
                       onClick={handleCopyInviteLink}
-                      className="flex-shrink-0"
+                      className="flex-shrink-0 h-8 w-8 p-0"
                     >
                       <Copy className="h-4 w-4" />
                     </Button>
