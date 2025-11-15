@@ -21,16 +21,19 @@ const GroupDetail = () => {
   const [loading, setLoading] = useState(true);
   const [inviteEmail, setInviteEmail] = useState("");
   const [inviting, setInviting] = useState(false);
+  const [pendingInvitation, setPendingInvitation] = useState<any>(null);
+  const [accepting, setAccepting] = useState(false);
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
       if (!session) {
-        navigate("/auth");
+        // Redirect to auth with return URL
+        navigate(`/auth?returnUrl=/group/${groupId}`);
       } else {
         setUser(session.user);
       }
     });
-  }, [navigate]);
+  }, [navigate, groupId]);
 
   const fetchGroupData = async () => {
     try {
@@ -50,6 +53,14 @@ const GroupDetail = () => {
       setGroup(groupResult.data);
       setInvitations(invitationsResult.data || []);
       setMembers(membersResult.data || []);
+
+      // Check if current user has a pending invitation
+      if (user?.email) {
+        const userInvitation = invitationsResult.data?.find(
+          (inv) => inv.invited_email === user.email && inv.status === "pending"
+        );
+        setPendingInvitation(userInvitation);
+      }
     } catch (error) {
       console.error("Error fetching group data:", error);
       toast({
@@ -67,6 +78,48 @@ const GroupDetail = () => {
       fetchGroupData();
     }
   }, [user, groupId]);
+
+  const handleAcceptInvitation = async () => {
+    if (!pendingInvitation || !user) return;
+
+    setAccepting(true);
+
+    try {
+      // Add user to group members
+      const { error: memberError } = await supabase
+        .from("group_members")
+        .insert({
+          group_id: groupId,
+          user_id: user.id,
+        });
+
+      if (memberError) throw memberError;
+
+      // Update invitation status
+      const { error: inviteError } = await supabase
+        .from("group_invitations")
+        .update({ status: "accepted" })
+        .eq("id", pendingInvitation.id);
+
+      if (inviteError) throw inviteError;
+
+      toast({
+        title: "Welcome to the group!",
+        description: "You've successfully joined the group",
+      });
+
+      setPendingInvitation(null);
+      fetchGroupData();
+    } catch (error: any) {
+      toast({
+        title: "Error accepting invitation",
+        description: error.message,
+        variant: "destructive",
+      });
+    } finally {
+      setAccepting(false);
+    }
+  };
 
   const handleSendInvite = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -173,6 +226,34 @@ const GroupDetail = () => {
 
         <div className="grid gap-6 lg:grid-cols-3">
           <div className="lg:col-span-2 space-y-6">
+            {pendingInvitation && (
+              <Card className="shadow-card border-primary/20 border-2">
+                <CardHeader>
+                  <CardTitle>You're Invited!</CardTitle>
+                  <CardDescription>
+                    You've been invited to join this group. Accept the invitation to view details and participate.
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <Button
+                    onClick={handleAcceptInvitation}
+                    disabled={accepting}
+                    size="lg"
+                    className="w-full"
+                  >
+                    {accepting ? (
+                      <>
+                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                        Accepting...
+                      </>
+                    ) : (
+                      "Accept Invitation"
+                    )}
+                  </Button>
+                </CardContent>
+              </Card>
+            )}
+
             <Card className="shadow-card border-border/50">
               <CardHeader>
                 <div className="flex items-start justify-between">
