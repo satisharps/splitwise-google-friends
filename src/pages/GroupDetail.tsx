@@ -9,6 +9,8 @@ import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
 import { ArrowLeft, Mail, Loader2, Users, Send, Link2, Copy } from "lucide-react";
+import { AddExpenseDialog } from "@/components/AddExpenseDialog";
+import { ExpenseList } from "@/components/ExpenseList";
 
 const GroupDetail = () => {
   const { groupId } = useParams();
@@ -23,6 +25,7 @@ const GroupDetail = () => {
   const [inviting, setInviting] = useState(false);
   const [pendingInvitation, setPendingInvitation] = useState<any>(null);
   const [accepting, setAccepting] = useState(false);
+  const [expenses, setExpenses] = useState<any[]>([]);
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
@@ -73,9 +76,38 @@ const GroupDetail = () => {
     }
   };
 
+  const fetchExpenses = async () => {
+    try {
+      const { data, error } = await supabase
+        .from("expenses")
+        .select(`
+          *,
+          payer_profile:profiles!expenses_paid_by_fkey(display_name, email),
+          expense_splits(
+            user_id,
+            amount,
+            profiles(display_name, email)
+          )
+        `)
+        .eq("group_id", groupId)
+        .order("expense_date", { ascending: false });
+
+      if (error) throw error;
+      setExpenses(data || []);
+    } catch (error) {
+      console.error("Error fetching expenses:", error);
+      toast({
+        title: "Error loading expenses",
+        description: "Could not load expenses",
+        variant: "destructive",
+      });
+    }
+  };
+
   useEffect(() => {
     if (user && groupId) {
       fetchGroupData();
+      fetchExpenses();
     }
   }, [user, groupId]);
 
@@ -274,10 +306,17 @@ const GroupDetail = () => {
 
             <Card className="shadow-card border-border/50">
               <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <Users className="h-5 w-5" />
-                  Members
-                </CardTitle>
+                <div className="flex items-center justify-between">
+                  <CardTitle className="flex items-center gap-2">
+                    <Users className="h-5 w-5" />
+                    Members
+                  </CardTitle>
+                  <AddExpenseDialog
+                    groupId={groupId!}
+                    members={members}
+                    onExpenseAdded={fetchExpenses}
+                  />
+                </div>
               </CardHeader>
               <CardContent>
                 {members.length === 0 ? (
@@ -301,6 +340,18 @@ const GroupDetail = () => {
                     ))}
                   </div>
                 )}
+              </CardContent>
+            </Card>
+
+            <Card className="shadow-card border-border/50">
+              <CardHeader>
+                <CardTitle>Expenses</CardTitle>
+                <CardDescription>
+                  Track and split expenses with your group
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <ExpenseList expenses={expenses} />
               </CardContent>
             </Card>
           </div>
