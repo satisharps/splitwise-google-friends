@@ -53,7 +53,7 @@ const CreateGroupDialog = ({ onGroupCreated }: CreateGroupDialogProps) => {
         .insert({
           name: groupName,
           currency: currency,
-          owner_id: user.id,
+          created_by: user.id,
         });
 
       if (error) throw error;
