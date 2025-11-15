@@ -36,9 +36,9 @@ const Header = ({ user }: HeaderProps) => {
 
   return (
     <header className="sticky top-0 z-50 w-full border-b border-border/40 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-      <div className="container flex h-16 items-center justify-between">
-        <div className="flex items-center gap-3">
-          <div className="w-10 h-10 bg-gradient-to-br from-primary to-primary/60 rounded-xl flex items-center justify-center">
+      <div className="container flex h-14 md:h-16 items-center justify-between px-4 md:px-6">
+        <div className="flex items-center gap-2 md:gap-3">
+          <div className="w-8 h-8 md:w-10 md:h-10 bg-gradient-to-br from-primary to-primary/60 rounded-xl flex items-center justify-center">
             <svg
               xmlns="http://www.w3.org/2000/svg"
               viewBox="0 0 24 24"
@@ -47,22 +47,22 @@ const Header = ({ user }: HeaderProps) => {
               strokeWidth="2"
               strokeLinecap="round"
               strokeLinejoin="round"
-              className="w-6 h-6 text-primary-foreground"
+              className="w-5 h-5 md:w-6 md:h-6 text-primary-foreground"
             >
               <circle cx="12" cy="12" r="10" />
               <path d="M16 8h-6a2 2 0 1 0 0 4h4a2 2 0 1 1 0 4H8" />
               <path d="M12 18V6" />
             </svg>
           </div>
-          <h1 className="text-xl font-bold bg-gradient-to-r from-primary to-primary/70 bg-clip-text text-transparent">
+          <h1 className="text-lg md:text-xl font-bold bg-gradient-to-r from-primary to-primary/70 bg-clip-text text-transparent">
             SplitEase
           </h1>
         </div>
 
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <Button variant="ghost" className="relative h-10 w-10 rounded-full">
-              <Avatar className="h-10 w-10">
+            <Button variant="ghost" className="relative h-9 w-9 md:h-10 md:w-10 rounded-full p-0">
+              <Avatar className="h-9 w-9 md:h-10 md:w-10">
                 <AvatarImage src={user?.user_metadata?.avatar_url} alt={user?.email} />
                 <AvatarFallback className="bg-primary text-primary-foreground">
                   {user?.email?.charAt(0).toUpperCase()}

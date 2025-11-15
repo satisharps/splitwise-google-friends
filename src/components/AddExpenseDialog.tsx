@@ -209,19 +209,19 @@ export function AddExpenseDialog({
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        <Button size="lg" className="gap-2">
-          <Plus className="h-5 w-5" />
-          Add Expense
+        <Button size="default" className="w-full sm:w-auto bg-primary hover:bg-primary/90 text-primary-foreground shadow-soft">
+          <Plus className="mr-2 h-4 w-4" />
+          <span className="text-sm md:text-base">Add Expense</span>
         </Button>
       </DialogTrigger>
-      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
-        <DialogHeader>
-          <DialogTitle>Add New Expense</DialogTitle>
-          <DialogDescription>
+      <DialogContent className="sm:max-w-[500px] max-h-[85vh] md:max-h-[90vh] overflow-y-auto mx-4">
+        <DialogHeader className="pb-2">
+          <DialogTitle className="text-lg md:text-xl">Add New Expense</DialogTitle>
+          <DialogDescription className="text-sm">
             Add an expense and split it among group members.
           </DialogDescription>
         </DialogHeader>
-        <form onSubmit={handleSubmit} className="space-y-4">
+        <form onSubmit={handleSubmit} className="space-y-3 md:space-y-4">
           <div className="space-y-2">
             <Label htmlFor="name">Expense Name</Label>
             <Input
@@ -337,7 +337,7 @@ export function AddExpenseDialog({
             </div>
           )}
 
-          <DialogFooter>
+          <DialogFooter className="gap-2 sm:gap-0">
             <Button
               type="button"
               variant="outline"
@@ -346,10 +346,11 @@ export function AddExpenseDialog({
                 setOpen(false);
               }}
               disabled={loading}
+              className="w-full sm:w-auto"
             >
               Cancel
             </Button>
-            <Button type="submit" disabled={loading}>
+            <Button type="submit" disabled={loading} className="w-full sm:w-auto">
               {loading ? (
                 <>
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />

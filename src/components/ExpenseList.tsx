@@ -57,28 +57,28 @@ export function ExpenseList({ expenses, currency }: { expenses: Expense[]; curre
   }
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-3 md:space-y-4">
       {expenses.map((expense) => (
         <Card key={expense.id} className="shadow-sm hover:shadow-md transition-shadow">
-          <CardHeader className="pb-3">
-            <div className="flex items-start justify-between">
-              <div className="space-y-1">
-                <CardTitle className="text-lg">{expense.name}</CardTitle>
-                <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                  <Calendar className="h-3.5 w-3.5" />
-                  <span>{format(new Date(expense.expense_date), "MMM d, yyyy")}</span>
+          <CardHeader className="pb-3 p-4 md:p-6">
+            <div className="flex items-start justify-between gap-2 md:gap-3">
+              <div className="space-y-1 flex-1 min-w-0">
+                <CardTitle className="text-base md:text-lg truncate">{expense.name}</CardTitle>
+                <div className="flex items-center gap-1.5 md:gap-2 text-xs md:text-sm text-muted-foreground">
+                  <Calendar className="h-3 w-3 md:h-3.5 md:w-3.5 shrink-0" />
+                  <span className="truncate">{format(new Date(expense.expense_date), "MMM d, yyyy")}</span>
                 </div>
               </div>
-              <Badge variant="secondary" className="text-base font-semibold">
+              <Badge variant="secondary" className="text-sm md:text-base font-semibold shrink-0">
                 {currencySymbol}{expense.amount.toFixed(2)}
               </Badge>
             </div>
           </CardHeader>
-          <CardContent className="space-y-3">
-            <div className="flex items-center gap-2 text-sm">
-              <User className="h-4 w-4 text-muted-foreground" />
-              <span className="text-muted-foreground">Paid by:</span>
-              <span className="font-medium">
+          <CardContent className="space-y-3 p-4 pt-0 md:p-6 md:pt-0">
+            <div className="flex items-center gap-1.5 md:gap-2 text-xs md:text-sm">
+              <User className="h-3.5 w-3.5 md:h-4 md:w-4 text-muted-foreground shrink-0" />
+              <span className="text-muted-foreground shrink-0">Paid by:</span>
+              <span className="font-medium truncate">
                 {expense.payer_profile?.display_name ||
                   expense.payer_profile?.email ||
                   "Unknown"}
@@ -93,14 +93,14 @@ export function ExpenseList({ expenses, currency }: { expenses: Expense[]; curre
                 {expense.expense_splits.map((split) => (
                   <div
                     key={split.user_id}
-                    className="flex items-center justify-between text-sm"
+                    className="flex items-center justify-between text-xs md:text-sm gap-2"
                   >
-                    <span className="text-muted-foreground">
+                    <span className="text-muted-foreground truncate flex-1">
                       {split.profiles?.display_name ||
                         split.profiles?.email ||
                         "Unknown"}
                     </span>
-                    <span className="font-medium">
+                    <span className="font-medium shrink-0">
                       {currencySymbol}{split.amount.toFixed(2)}
                     </span>
                   </div>
