@@ -267,7 +267,6 @@ export function AddExpenseDialog({
               </SelectTrigger>
               <SelectContent>
                 {members.map((member) => {
-                  console.log("Member data:", member);
                   const displayName = member.profiles?.display_name || 
                                      member.profiles?.email || 
                                      member.user_id.slice(0, 8);
