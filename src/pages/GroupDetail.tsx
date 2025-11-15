@@ -174,15 +174,25 @@ const GroupDetail = () => {
     setAccepting(true);
 
     try {
-      // Add user to group members
-      const { error: memberError } = await supabase
+      // Check if user is already a member
+      const { data: existingMember } = await supabase
         .from("group_members")
-        .insert({
-          group_id: groupId,
-          user_id: user.id,
-        });
+        .select("id")
+        .eq("group_id", groupId)
+        .eq("user_id", user.id)
+        .maybeSingle();
 
-      if (memberError) throw memberError;
+      // Only add user if not already a member
+      if (!existingMember) {
+        const { error: memberError } = await supabase
+          .from("group_members")
+          .insert({
+            group_id: groupId,
+            user_id: user.id,
+          });
+
+        if (memberError) throw memberError;
+      }
 
       // Update invitation status
       const { error: inviteError } = await supabase
