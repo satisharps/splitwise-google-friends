@@ -382,24 +382,6 @@ const GroupDetail = () => {
               </CardContent>
             </Card>
 
-            <Card className="shadow-card border-border/50">
-              <CardHeader className="p-4 md:p-6 pb-3 md:pb-6">
-                <CardTitle className="text-base sm:text-lg">Settlement Status</CardTitle>
-                <CardDescription className="text-xs md:text-sm mt-1">
-                  Who owes what and simplified payment suggestions
-                </CardDescription>
-              </CardHeader>
-              <CardContent className="p-4 md:p-6 pt-0">
-                <SettlementSummary
-                  groupId={groupId!}
-                  members={members}
-                  expenses={expenses}
-                  currency={group?.currency || "USD"}
-                  onSettlementAdded={fetchExpenses}
-                />
-              </CardContent>
-            </Card>
-
             <SettlementSummary
               groupId={groupId!}
               members={members}
