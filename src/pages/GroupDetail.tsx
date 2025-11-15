@@ -106,22 +106,42 @@ const GroupDetail = () => {
 
   const fetchExpenses = async () => {
     try {
-      const { data, error } = await supabase
+      const { data: expensesData, error: expensesError } = await supabase
         .from("expenses")
-        .select(`
-          *,
-          payer_profile:profiles!expenses_paid_by_fkey(display_name, email),
-          expense_splits(
-            user_id,
-            amount,
-            profiles(display_name, email)
-          )
-        `)
+        .select("*")
         .eq("group_id", groupId)
         .order("expense_date", { ascending: false });
 
-      if (error) throw error;
-      setExpenses(data || []);
+      if (expensesError) throw expensesError;
+
+      // Fetch related data separately
+      const expensesWithDetails = await Promise.all(
+        (expensesData || []).map(async (expense) => {
+          const [payerResult, splitsResult] = await Promise.all([
+            supabase
+              .from("profiles")
+              .select("display_name, email")
+              .eq("user_id", expense.paid_by)
+              .single(),
+            supabase
+              .from("expense_splits")
+              .select(`
+                user_id,
+                amount,
+                profiles(display_name, email)
+              `)
+              .eq("expense_id", expense.id),
+          ]);
+
+          return {
+            ...expense,
+            payer_profile: payerResult.data,
+            expense_splits: splitsResult.data || [],
+          };
+        })
+      );
+
+      setExpenses(expensesWithDetails);
     } catch (error) {
       console.error("Error fetching expenses:", error);
       toast({
