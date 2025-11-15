@@ -24,7 +24,22 @@ type Expense = {
   }[];
 };
 
-export function ExpenseList({ expenses }: { expenses: Expense[] }) {
+const getCurrencySymbol = (currency: string) => {
+  const symbols: Record<string, string> = {
+    USD: "$",
+    EUR: "€",
+    GBP: "£",
+    INR: "₹",
+    JPY: "¥",
+    AUD: "A$",
+    CAD: "C$",
+  };
+  return symbols[currency] || currency + " ";
+};
+
+export function ExpenseList({ expenses, currency }: { expenses: Expense[]; currency: string }) {
+  const currencySymbol = getCurrencySymbol(currency);
+
   if (expenses.length === 0) {
     return (
       <Card>
@@ -55,7 +70,7 @@ export function ExpenseList({ expenses }: { expenses: Expense[] }) {
                 </div>
               </div>
               <Badge variant="secondary" className="text-base font-semibold">
-                ${expense.amount.toFixed(2)}
+                {currencySymbol}{expense.amount.toFixed(2)}
               </Badge>
             </div>
           </CardHeader>
@@ -86,7 +101,7 @@ export function ExpenseList({ expenses }: { expenses: Expense[] }) {
                         "Unknown"}
                     </span>
                     <span className="font-medium">
-                      ${split.amount.toFixed(2)}
+                      {currencySymbol}{split.amount.toFixed(2)}
                     </span>
                   </div>
                 ))}
