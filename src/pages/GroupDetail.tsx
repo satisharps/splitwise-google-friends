@@ -400,6 +400,14 @@ const GroupDetail = () => {
               </CardContent>
             </Card>
 
+            <SettlementSummary
+              groupId={groupId!}
+              members={members}
+              expenses={expenses}
+              currency={group?.currency || "USD"}
+              onSettlementAdded={fetchExpenses}
+            />
+
             <Card className="shadow-card border-border/50">
               <CardHeader className="p-4 md:p-6 pb-3 md:pb-6">
                 <CardTitle className="text-base sm:text-lg">Expenses</CardTitle>
