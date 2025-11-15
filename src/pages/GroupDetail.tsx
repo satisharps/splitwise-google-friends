@@ -55,7 +55,35 @@ const GroupDetail = () => {
       
       setGroup(groupResult.data);
       setInvitations(invitationsResult.data || []);
-      setMembers(membersResult.data || []);
+      
+      // Ensure creator is included in members list
+      let allMembers = membersResult.data || [];
+      const creatorId = groupResult.data?.created_by;
+      const creatorIsMember = allMembers.some(m => m.user_id === creatorId);
+      
+      if (!creatorIsMember && creatorId) {
+        // Fetch creator's profile
+        const { data: creatorProfile } = await supabase
+          .from("profiles")
+          .select("*")
+          .eq("user_id", creatorId)
+          .single();
+        
+        if (creatorProfile) {
+          allMembers = [
+            {
+              user_id: creatorId,
+              profiles: creatorProfile as any,
+              group_id: groupId as string,
+              id: crypto.randomUUID(),
+              joined_at: new Date().toISOString(),
+            },
+            ...allMembers,
+          ];
+        }
+      }
+      
+      setMembers(allMembers);
 
       // Check if current user has a pending invitation
       if (user?.email) {
