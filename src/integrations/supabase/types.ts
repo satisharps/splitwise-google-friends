@@ -220,6 +220,10 @@ export type Database = {
         Args: { _group_id: string; _user_id: string }
         Returns: boolean
       }
+      users_share_group: {
+        Args: { _user1_id: string; _user2_id: string }
+        Returns: boolean
+      }
     }
     Enums: {
       [_ in never]: never
