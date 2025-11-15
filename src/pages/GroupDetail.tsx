@@ -326,7 +326,7 @@ const GroupDetail = () => {
                 </CardDescription>
               </CardHeader>
               <CardContent>
-                <ExpenseList expenses={expenses} />
+                <ExpenseList expenses={expenses} currency={group?.currency || "USD"} />
               </CardContent>
             </Card>
           </div>
@@ -335,7 +335,7 @@ const GroupDetail = () => {
             <Card className="shadow-card border-border/50">
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
-                  <Mail className="h-5 w-5" />
+                  <Link2 className="h-5 w-5" />
                   Invite Friends
                 </CardTitle>
                 <CardDescription>
@@ -343,7 +343,7 @@ const GroupDetail = () => {
                 </CardDescription>
               </CardHeader>
               <CardContent>
-                <div className="space-y-4 mb-6">
+                <div className="space-y-4">
                   <div className="flex items-center gap-2 p-3 rounded-lg bg-accent/30 border border-border/50">
                     <Link2 className="h-4 w-4 text-muted-foreground flex-shrink-0" />
                     <code className="flex-1 text-sm truncate text-muted-foreground">
@@ -360,43 +360,9 @@ const GroupDetail = () => {
                     </Button>
                   </div>
                   <p className="text-xs text-muted-foreground text-center">
-                    Anyone with this link can request to join the group
+                    Anyone with this link can join the group
                   </p>
                 </div>
-
-                </div>
-              </CardContent>
-            </Card>
-          </div>
-        </div>
-      </main>
-    </div>
-  );
-};
-
-export default GroupDetail;
-                <CardDescription>
-                  Friends invited who need to accept to view group details
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                {invitations.filter(inv => inv.status === 'pending').length === 0 ? (
-                  <p className="text-sm text-muted-foreground">No pending invitations</p>
-                ) : (
-                  <div className="space-y-2">
-                    {invitations
-                      .filter(inv => inv.status === 'pending')
-                      .map((invitation) => (
-                        <div
-                          key={invitation.id}
-                          className="flex items-center gap-2 p-2 rounded-md bg-accent/30 text-sm"
-                        >
-                          <Mail className="h-4 w-4 text-muted-foreground flex-shrink-0" />
-                          <span className="truncate">{invitation.invited_email}</span>
-                        </div>
-                      ))}
-                  </div>
-                )}
               </CardContent>
             </Card>
           </div>
