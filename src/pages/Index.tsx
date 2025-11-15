@@ -1,7 +1,22 @@
-import Dashboard from "./Dashboard";
+import { useEffect } from "react";
+import { useNavigate } from "react-router-dom";
+import { supabase } from "@/integrations/supabase/client";
 
 const Index = () => {
-  return <Dashboard />;
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    // Check if user is authenticated
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      if (session) {
+        navigate("/dashboard");
+      } else {
+        navigate("/auth");
+      }
+    });
+  }, [navigate]);
+
+  return null;
 };
 
 export default Index;

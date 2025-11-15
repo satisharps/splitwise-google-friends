@@ -16,7 +16,7 @@ const Dashboard = () => {
     // Check authentication
     supabase.auth.getSession().then(({ data: { session } }) => {
       if (!session) {
-        navigate("/auth");
+        navigate("/auth?returnUrl=/dashboard");
       } else {
         setUser(session.user);
       }
@@ -24,7 +24,7 @@ const Dashboard = () => {
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
       if (!session) {
-        navigate("/auth");
+        navigate("/auth?returnUrl=/dashboard");
       } else {
         setUser(session.user);
       }
