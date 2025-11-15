@@ -130,6 +130,13 @@ const GroupDetail = () => {
     }
   };
 
+  // Auto-accept invitation when user arrives with pending invitation
+  useEffect(() => {
+    if (user && pendingInvitation && !loading && !accepting) {
+      handleAcceptInvitation();
+    }
+  }, [user, pendingInvitation, loading]);
+
   const handleSendInvite = async (e: React.FormEvent) => {
     e.preventDefault();
     
@@ -235,30 +242,16 @@ const GroupDetail = () => {
 
         <div className="grid gap-6 lg:grid-cols-3">
           <div className="lg:col-span-2 space-y-6">
-            {pendingInvitation && (
+            {accepting && (
               <Card className="shadow-card border-primary/20 border-2">
-                <CardHeader>
-                  <CardTitle>You're Invited!</CardTitle>
-                  <CardDescription>
-                    You've been invited to join this group. Accept the invitation to view details and participate.
-                  </CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <Button
-                    onClick={handleAcceptInvitation}
-                    disabled={accepting}
-                    size="lg"
-                    className="w-full"
-                  >
-                    {accepting ? (
-                      <>
-                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                        Accepting...
-                      </>
-                    ) : (
-                      "Accept Invitation"
-                    )}
-                  </Button>
+                <CardContent className="pt-6">
+                  <div className="flex flex-col items-center justify-center py-8 text-center">
+                    <Loader2 className="h-8 w-8 animate-spin text-primary mb-4" />
+                    <p className="text-lg font-medium">Joining group...</p>
+                    <p className="text-sm text-muted-foreground mt-2">
+                      Please wait while we add you to the group
+                    </p>
+                  </div>
                 </CardContent>
               </Card>
             )}
