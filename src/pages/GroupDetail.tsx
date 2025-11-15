@@ -1,0 +1,281 @@
+import { useEffect, useState } from "react";
+import { useParams, useNavigate } from "react-router-dom";
+import { supabase } from "@/integrations/supabase/client";
+import Header from "@/components/Header";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Badge } from "@/components/ui/badge";
+import { useToast } from "@/hooks/use-toast";
+import { ArrowLeft, Mail, Loader2, Users, Send } from "lucide-react";
+
+const GroupDetail = () => {
+  const { groupId } = useParams();
+  const navigate = useNavigate();
+  const { toast } = useToast();
+  const [user, setUser] = useState<any>(null);
+  const [group, setGroup] = useState<any>(null);
+  const [invitations, setInvitations] = useState<any[]>([]);
+  const [members, setMembers] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [inviteEmail, setInviteEmail] = useState("");
+  const [inviting, setInviting] = useState(false);
+
+  useEffect(() => {
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      if (!session) {
+        navigate("/auth");
+      } else {
+        setUser(session.user);
+      }
+    });
+  }, [navigate]);
+
+  const fetchGroupData = async () => {
+    try {
+      setLoading(true);
+      
+      const [groupResult, invitationsResult, membersResult] = await Promise.all([
+        supabase.from("expense_groups").select("*").eq("id", groupId).single(),
+        supabase.from("group_invitations").select("*").eq("group_id", groupId),
+        supabase
+          .from("group_members")
+          .select("*, profiles(*)")
+          .eq("group_id", groupId),
+      ]);
+
+      if (groupResult.error) throw groupResult.error;
+      
+      setGroup(groupResult.data);
+      setInvitations(invitationsResult.data || []);
+      setMembers(membersResult.data || []);
+    } catch (error) {
+      console.error("Error fetching group data:", error);
+      toast({
+        title: "Error loading group",
+        description: "Could not load group details",
+        variant: "destructive",
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    if (user && groupId) {
+      fetchGroupData();
+    }
+  }, [user, groupId]);
+
+  const handleSendInvite = async (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    if (!inviteEmail.trim()) {
+      toast({
+        title: "Email required",
+        description: "Please enter an email address",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    // Basic email validation
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(inviteEmail)) {
+      toast({
+        title: "Invalid email",
+        description: "Please enter a valid email address",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setInviting(true);
+
+    try {
+      const { error } = await supabase
+        .from("group_invitations")
+        .insert({
+          group_id: groupId,
+          email: inviteEmail.toLowerCase(),
+          invited_by: user.id,
+        });
+
+      if (error) {
+        if (error.code === "23505") {
+          throw new Error("This email has already been invited to this group");
+        }
+        throw error;
+      }
+
+      toast({
+        title: "Invitation sent!",
+        description: `Invitation sent to ${inviteEmail}`,
+      });
+
+      setInviteEmail("");
+      fetchGroupData();
+    } catch (error: any) {
+      toast({
+        title: "Error sending invitation",
+        description: error.message,
+        variant: "destructive",
+      });
+    } finally {
+      setInviting(false);
+    }
+  };
+
+  if (!user || loading) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-background via-accent/10 to-background">
+        <Header user={user} />
+        <div className="flex items-center justify-center py-12">
+          <Loader2 className="h-8 w-8 animate-spin text-primary" />
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="min-h-screen bg-gradient-to-br from-background via-accent/10 to-background">
+      <Header user={user} />
+      <main className="container py-8">
+        <Button
+          variant="ghost"
+          onClick={() => navigate("/")}
+          className="mb-6"
+        >
+          <ArrowLeft className="mr-2 h-4 w-4" />
+          Back to Groups
+        </Button>
+
+        <div className="grid gap-6 lg:grid-cols-3">
+          <div className="lg:col-span-2 space-y-6">
+            <Card className="shadow-card border-border/50">
+              <CardHeader>
+                <div className="flex items-start justify-between">
+                  <div>
+                    <CardTitle className="text-2xl">{group?.name}</CardTitle>
+                    <CardDescription className="mt-1">
+                      Created {new Date(group?.created_at).toLocaleDateString()}
+                    </CardDescription>
+                  </div>
+                  <Badge variant="secondary" className="text-base px-3 py-1">
+                    {group?.currency}
+                  </Badge>
+                </div>
+              </CardHeader>
+            </Card>
+
+            <Card className="shadow-card border-border/50">
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Users className="h-5 w-5" />
+                  Members
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                {members.length === 0 ? (
+                  <p className="text-muted-foreground text-sm">No members yet</p>
+                ) : (
+                  <div className="space-y-3">
+                    {members.map((member) => (
+                      <div key={member.id} className="flex items-center gap-3 p-3 rounded-lg bg-accent/50">
+                        <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center text-primary font-medium">
+                          {member.profiles?.email?.charAt(0).toUpperCase()}
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <p className="font-medium truncate">
+                            {member.profiles?.full_name || member.profiles?.email}
+                          </p>
+                          <p className="text-sm text-muted-foreground truncate">
+                            {member.profiles?.email}
+                          </p>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          </div>
+
+          <div className="space-y-6">
+            <Card className="shadow-card border-border/50">
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Mail className="h-5 w-5" />
+                  Invite Friends
+                </CardTitle>
+                <CardDescription>
+                  Send an invitation via email
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <form onSubmit={handleSendInvite} className="space-y-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="inviteEmail">Email Address</Label>
+                    <Input
+                      id="inviteEmail"
+                      type="email"
+                      placeholder="friend@example.com"
+                      value={inviteEmail}
+                      onChange={(e) => setInviteEmail(e.target.value)}
+                      disabled={inviting}
+                    />
+                  </div>
+                  <Button
+                    type="submit"
+                    className="w-full"
+                    disabled={inviting}
+                  >
+                    {inviting ? (
+                      <>
+                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                        Sending...
+                      </>
+                    ) : (
+                      <>
+                        <Send className="mr-2 h-4 w-4" />
+                        Send Invitation
+                      </>
+                    )}
+                  </Button>
+                </form>
+              </CardContent>
+            </Card>
+
+            <Card className="shadow-card border-border/50">
+              <CardHeader>
+                <CardTitle>Pending Invitations</CardTitle>
+              </CardHeader>
+              <CardContent>
+                {invitations.filter(inv => inv.status === 'pending').length === 0 ? (
+                  <p className="text-sm text-muted-foreground">No pending invitations</p>
+                ) : (
+                  <div className="space-y-2">
+                    {invitations
+                      .filter(inv => inv.status === 'pending')
+                      .map((invitation) => (
+                        <div
+                          key={invitation.id}
+                          className="flex items-center gap-2 p-2 rounded-md bg-accent/30 text-sm"
+                        >
+                          <Mail className="h-4 w-4 text-muted-foreground flex-shrink-0" />
+                          <span className="truncate">{invitation.email}</span>
+                        </div>
+                      ))}
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          </div>
+        </div>
+      </main>
+    </div>
+  );
+};
+
+export default GroupDetail;
