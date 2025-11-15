@@ -5,8 +5,9 @@ import Header from "@/components/Header";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { useToast } from "@/hooks/use-toast";
-import { ArrowLeft, Loader2, Users, Link2, Copy } from "lucide-react";
+import { ArrowLeft, Loader2, Users, Link2, Copy, TrendingUp } from "lucide-react";
 import { SettlementSummary } from "@/components/SettlementSummary";
 import { AddExpenseDialog } from "@/components/AddExpenseDialog";
 import { ExpenseList } from "@/components/ExpenseList";
@@ -23,6 +24,7 @@ const GroupDetail = () => {
   const [pendingInvitation, setPendingInvitation] = useState<any>(null);
   const [accepting, setAccepting] = useState(false);
   const [expenses, setExpenses] = useState<any[]>([]);
+  const [showSettlements, setShowSettlements] = useState(false);
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
@@ -392,13 +394,43 @@ const GroupDetail = () => {
               </CardContent>
             </Card>
 
-            <SettlementSummary
-              groupId={groupId!}
-              members={members}
-              expenses={expenses}
-              currency={group?.currency || "USD"}
-              onSettlementAdded={fetchExpenses}
-            />
+            <Card 
+              className="shadow-card border-border/50 cursor-pointer hover:border-primary/30 transition-colors"
+              onClick={() => setShowSettlements(true)}
+            >
+              <CardHeader className="p-4 md:p-6">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <TrendingUp className="h-4 w-4 sm:h-5 sm:w-5 text-primary" />
+                    <CardTitle className="text-base sm:text-lg">Settlement Summary</CardTitle>
+                  </div>
+                  <Button variant="ghost" size="sm">
+                    View Details →
+                  </Button>
+                </div>
+                <CardDescription className="text-xs md:text-sm mt-1">
+                  Click to view who owes what and settle debts
+                </CardDescription>
+              </CardHeader>
+            </Card>
+
+            <Dialog open={showSettlements} onOpenChange={setShowSettlements}>
+              <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+                <DialogHeader>
+                  <DialogTitle>Settlement Summary</DialogTitle>
+                </DialogHeader>
+                <SettlementSummary
+                  groupId={groupId!}
+                  members={members}
+                  expenses={expenses}
+                  currency={group?.currency || "USD"}
+                  onSettlementAdded={() => {
+                    fetchExpenses();
+                    setShowSettlements(false);
+                  }}
+                />
+              </DialogContent>
+            </Dialog>
 
             <Card className="shadow-card border-border/50">
               <CardHeader className="p-4 md:p-6 pb-3 md:pb-6">
