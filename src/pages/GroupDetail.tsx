@@ -43,7 +43,7 @@ const GroupDetail = () => {
         supabase.from("group_invitations").select("*").eq("group_id", groupId),
         supabase
           .from("group_members")
-          .select("*, profiles(*)")
+          .select("*")
           .eq("group_id", groupId),
       ]);
 
@@ -76,33 +76,41 @@ const GroupDetail = () => {
       setGroup(groupResult.data);
       setInvitations(invitationsResult.data || []);
       
-      // Ensure creator is included in members list
-      let allMembers = membersResult.data || [];
-      const creatorId = groupResult.data?.created_by;
-      const creatorIsMember = allMembers.some(m => m.user_id === creatorId);
-      
+      // Merge members with their profiles explicitly (avoid relying on implicit FK)
+      const rawMembers = (membersResult.data || []) as any[];
+      const creatorId = groupResult.data?.created_by as string | undefined;
+
+      const userIds = Array.from(new Set([
+        ...rawMembers.map((m: any) => m.user_id),
+        ...(creatorId ? [creatorId] : []),
+      ]));
+
+      const { data: profilesData } = await supabase
+        .from("profiles")
+        .select("*")
+        .in("user_id", userIds);
+
+      const profileMap = new Map((profilesData || []).map((p: any) => [p.user_id, p]));
+
+      let allMembers: any[] = rawMembers.map((m: any) => ({
+        ...m,
+        profiles: profileMap.get(m.user_id) || null,
+      }));
+
+      const creatorIsMember = rawMembers.some((m: any) => m.user_id === creatorId);
       if (!creatorIsMember && creatorId) {
-        // Fetch creator's profile
-        const { data: creatorProfile } = await supabase
-          .from("profiles")
-          .select("*")
-          .eq("user_id", creatorId)
-          .single();
-        
-        if (creatorProfile) {
-          allMembers = [
-            {
-              user_id: creatorId,
-              profiles: creatorProfile as any,
-              group_id: groupId as string,
-              id: crypto.randomUUID(),
-              joined_at: new Date().toISOString(),
-            },
-            ...allMembers,
-          ];
-        }
+        allMembers = [
+          {
+            user_id: creatorId,
+            profiles: profileMap.get(creatorId) || null,
+            group_id: groupId as string,
+            id: crypto.randomUUID(),
+            joined_at: new Date().toISOString(),
+          } as any,
+          ...allMembers,
+        ];
       }
-      
+
       setMembers(allMembers);
 
       // Check if current user has a pending invitation
@@ -360,7 +368,7 @@ const GroupDetail = () => {
                         </div>
                         <div className="flex-1 min-w-0">
                           <p className="text-sm md:text-base font-medium truncate leading-tight">
-                            {member.profiles?.full_name || member.profiles?.email}
+                            {member.profiles?.display_name || member.profiles?.email}
                           </p>
                           <p className="text-xs md:text-sm text-muted-foreground truncate leading-tight mt-0.5">
                             {member.profiles?.email}
