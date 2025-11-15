@@ -37,12 +37,12 @@ const Auth = () => {
     try {
       setLoading(true);
       const params = new URLSearchParams(window.location.search);
-      const returnUrl = params.get("returnUrl") || "/";
+      const returnUrl = (params.get("returnUrl") || "/").trim();
       
       const { error } = await supabase.auth.signInWithOAuth({
         provider: "google",
         options: {
-          redirectTo: `${window.location.origin}${returnUrl}`,
+          redirectTo: `${window.location.origin.trim()}${returnUrl}`,
         },
       });
 
