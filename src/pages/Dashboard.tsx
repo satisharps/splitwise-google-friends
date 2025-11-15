@@ -118,7 +118,7 @@ const Dashboard = () => {
                 <GroupCard
                   key={group.id}
                   group={group}
-                  memberCount={(group.group_members?.[0]?.count || 0) + 1}
+                  memberCount={group.group_members?.[0]?.count || 0}
                 />
               ))}
             </div>

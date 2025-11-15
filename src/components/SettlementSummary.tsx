@@ -112,12 +112,14 @@ export function SettlementSummary({
     });
 
     // Apply existing settlements
+    // When someone pays their debt, their negative balance increases (moves toward zero)
+    // When someone receives payment, their positive balance decreases (moves toward zero)
     existingSettlements.forEach((settlement) => {
       const payer = balanceMap.get(settlement.payer_id);
       const payee = balanceMap.get(settlement.payee_id);
       
-      if (payer) payer.balance -= settlement.amount;
-      if (payee) payee.balance += settlement.amount;
+      if (payer) payer.balance += settlement.amount;
+      if (payee) payee.balance -= settlement.amount;
     });
 
     // Convert to array and filter out zero balances
