@@ -43,11 +43,11 @@ export function ExpenseList({ expenses, currency }: { expenses: Expense[]; curre
   if (expenses.length === 0) {
     return (
       <Card>
-        <CardContent className="pt-6">
-          <div className="text-center py-8">
-            <DollarSign className="h-12 w-12 mx-auto text-muted-foreground mb-3" />
-            <p className="text-muted-foreground">No expenses yet</p>
-            <p className="text-sm text-muted-foreground mt-1">
+        <CardContent className="pt-4 md:pt-6 p-4 md:p-6">
+          <div className="text-center py-6 md:py-8">
+            <DollarSign className="h-10 w-10 md:h-12 md:w-12 mx-auto text-muted-foreground mb-2 md:mb-3" />
+            <p className="text-sm md:text-base text-muted-foreground">No expenses yet</p>
+            <p className="text-xs md:text-sm text-muted-foreground mt-1">
               Add your first expense to get started
             </p>
           </div>
