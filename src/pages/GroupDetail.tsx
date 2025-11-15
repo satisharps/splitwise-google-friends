@@ -4,11 +4,9 @@ import { supabase } from "@/integrations/supabase/client";
 import Header from "@/components/Header";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
-import { ArrowLeft, Mail, Loader2, Users, Send, Link2, Copy } from "lucide-react";
+import { ArrowLeft, Loader2, Users, Link2, Copy } from "lucide-react";
 import { AddExpenseDialog } from "@/components/AddExpenseDialog";
 import { ExpenseList } from "@/components/ExpenseList";
 
@@ -21,8 +19,6 @@ const GroupDetail = () => {
   const [invitations, setInvitations] = useState<any[]>([]);
   const [members, setMembers] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
-  const [inviteEmail, setInviteEmail] = useState("");
-  const [inviting, setInviting] = useState(false);
   const [pendingInvitation, setPendingInvitation] = useState<any>(null);
   const [accepting, setAccepting] = useState(false);
   const [expenses, setExpenses] = useState<any[]>([]);
@@ -227,85 +223,6 @@ const GroupDetail = () => {
     }
   }, [user, pendingInvitation, loading]);
 
-  const handleSendInvite = async (e: React.FormEvent) => {
-    e.preventDefault();
-    
-    if (!inviteEmail.trim()) {
-      toast({
-        title: "Email required",
-        description: "Please enter an email address",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    // Basic email validation
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!emailRegex.test(inviteEmail)) {
-      toast({
-        title: "Invalid email",
-        description: "Please enter a valid email address",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    setInviting(true);
-
-    try {
-      // Insert invitation into database
-      const { error } = await supabase
-        .from("group_invitations")
-        .insert({
-          group_id: groupId,
-          invited_email: inviteEmail.toLowerCase(),
-          invited_by: user.id,
-        });
-
-      if (error) {
-        if (error.code === "23505") {
-          throw new Error("This email has already been invited to this group");
-        }
-        throw error;
-      }
-
-      // Send invitation email
-      const { error: emailError } = await supabase.functions.invoke("send-invitation", {
-        body: {
-          email: inviteEmail.toLowerCase(),
-          groupName: group?.name || "Expense Group",
-          inviterName: user.email || "A member",
-          groupId: groupId,
-        },
-      });
-
-      if (emailError) {
-        console.error("Error sending email:", emailError);
-        toast({
-          title: "Invitation created",
-          description: "Invitation saved but email sending failed. Please try again.",
-          variant: "destructive",
-        });
-      } else {
-        toast({
-          title: "Invitation sent!",
-          description: `Invitation email sent to ${inviteEmail}`,
-        });
-      }
-
-      setInviteEmail("");
-      fetchGroupData();
-    } catch (error: any) {
-      toast({
-        title: "Error sending invitation",
-        description: error.message,
-        variant: "destructive",
-      });
-    } finally {
-      setInviting(false);
-    }
-  };
-
   if (!user || loading) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-background via-accent/10 to-background">
@@ -447,54 +364,17 @@ const GroupDetail = () => {
                   </p>
                 </div>
 
-                <div className="relative">
-                  <div className="absolute inset-0 flex items-center">
-                    <span className="w-full border-t border-border" />
-                  </div>
-                  <div className="relative flex justify-center text-xs uppercase">
-                    <span className="bg-card px-2 text-muted-foreground">Or send via email</span>
-                  </div>
                 </div>
-
-                <form onSubmit={handleSendInvite} className="space-y-4 mt-6">
-                  <div className="space-y-2">
-                    <Label htmlFor="inviteEmail">Email Address</Label>
-                    <Input
-                      id="inviteEmail"
-                      type="email"
-                      placeholder="friend@example.com"
-                      value={inviteEmail}
-                      onChange={(e) => setInviteEmail(e.target.value)}
-                      disabled={inviting}
-                    />
-                    <p className="text-sm text-muted-foreground">
-                      Your friend will receive an invitation email. Ask them to accept the request to view group details.
-                    </p>
-                  </div>
-                  <Button
-                    type="submit"
-                    className="w-full"
-                    disabled={inviting}
-                  >
-                    {inviting ? (
-                      <>
-                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                        Sending...
-                      </>
-                    ) : (
-                      <>
-                        <Send className="mr-2 h-4 w-4" />
-                        Send Invitation
-                      </>
-                    )}
-                  </Button>
-                </form>
               </CardContent>
             </Card>
+          </div>
+        </div>
+      </main>
+    </div>
+  );
+};
 
-            <Card className="shadow-card border-border/50">
-              <CardHeader>
-                <CardTitle>Pending Invitations</CardTitle>
+export default GroupDetail;
                 <CardDescription>
                   Friends invited who need to accept to view group details
                 </CardDescription>
