@@ -8,7 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
-import { ArrowLeft, Mail, Loader2, Users, Send } from "lucide-react";
+import { ArrowLeft, Mail, Loader2, Users, Send, Link2, Copy } from "lucide-react";
 
 const GroupDetail = () => {
   const { groupId } = useParams();
@@ -78,6 +78,15 @@ const GroupDetail = () => {
       fetchGroupData();
     }
   }, [user, groupId]);
+
+  const handleCopyInviteLink = () => {
+    const inviteLink = `${window.location.origin}/group/${groupId}`;
+    navigator.clipboard.writeText(inviteLink);
+    toast({
+      title: "Link copied!",
+      description: "Share this link with friends to invite them to the group",
+    });
+  };
 
   const handleAcceptInvitation = async () => {
     if (!pendingInvitation || !user) return;
@@ -311,11 +320,41 @@ const GroupDetail = () => {
                   Invite Friends
                 </CardTitle>
                 <CardDescription>
-                  Send an invitation via email
+                  Send an invitation via email or share the link
                 </CardDescription>
               </CardHeader>
               <CardContent>
-                <form onSubmit={handleSendInvite} className="space-y-4">
+                <div className="space-y-4 mb-6">
+                  <div className="flex items-center gap-2 p-3 rounded-lg bg-accent/30 border border-border/50">
+                    <Link2 className="h-4 w-4 text-muted-foreground flex-shrink-0" />
+                    <code className="flex-1 text-sm truncate text-muted-foreground">
+                      {window.location.origin}/group/{groupId}
+                    </code>
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="sm"
+                      onClick={handleCopyInviteLink}
+                      className="flex-shrink-0"
+                    >
+                      <Copy className="h-4 w-4" />
+                    </Button>
+                  </div>
+                  <p className="text-xs text-muted-foreground text-center">
+                    Anyone with this link can request to join the group
+                  </p>
+                </div>
+
+                <div className="relative">
+                  <div className="absolute inset-0 flex items-center">
+                    <span className="w-full border-t border-border" />
+                  </div>
+                  <div className="relative flex justify-center text-xs uppercase">
+                    <span className="bg-card px-2 text-muted-foreground">Or send via email</span>
+                  </div>
+                </div>
+
+                <form onSubmit={handleSendInvite} className="space-y-4 mt-6">
                   <div className="space-y-2">
                     <Label htmlFor="inviteEmail">Email Address</Label>
                     <Input
