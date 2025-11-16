@@ -12,20 +12,28 @@ const Auth = () => {
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
+    console.log("Auth component mounted");
+    
     // Get return URL from query params
     const params = new URLSearchParams(window.location.search);
     const returnUrl = params.get("returnUrl") || "/";
+    console.log("Return URL:", returnUrl);
 
     // Check if user is already logged in
+    console.log("Checking for existing session...");
     supabase.auth.getSession().then(({ data: { session } }) => {
+      console.log("Existing session:", session ? "Found" : "None");
       if (session) {
+        console.log("Navigating to:", returnUrl);
         navigate(returnUrl);
       }
     });
 
     // Listen for auth state changes
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+      console.log("Auth state change - Event:", event, "Session:", session ? "Present" : "None");
       if (session) {
+        console.log("Navigating to:", returnUrl);
         navigate(returnUrl);
       }
     });
@@ -35,19 +43,34 @@ const Auth = () => {
 
   const handleGoogleSignIn = async () => {
     try {
+      console.log("=== Google Sign-In Started ===");
       setLoading(true);
+      
       const params = new URLSearchParams(window.location.search);
       const returnUrl = (params.get("returnUrl") || "/").trim();
+      console.log("Step 1 - Return URL:", returnUrl);
       
+      const redirectTo = `${window.location.origin.trim()}${returnUrl}`;
+      console.log("Step 2 - Full redirect URL:", redirectTo);
+      console.log("Step 3 - Redirect URL length:", redirectTo.length);
+      console.log("Step 4 - Redirect URL contains whitespace:", /\s/.test(redirectTo));
+      
+      console.log("Step 5 - Calling supabase.auth.signInWithOAuth...");
       const { error } = await supabase.auth.signInWithOAuth({
         provider: "google",
         options: {
-          redirectTo: `${window.location.origin.trim()}${returnUrl}`,
+          redirectTo: redirectTo,
         },
       });
 
-      if (error) throw error;
+      if (error) {
+        console.error("Step 6 - OAuth Error:", error);
+        throw error;
+      }
+      
+      console.log("Step 7 - OAuth call successful, redirecting to Google...");
     } catch (error: any) {
+      console.error("=== Sign-In Error ===", error);
       toast({
         title: "Error signing in",
         description: error.message,
