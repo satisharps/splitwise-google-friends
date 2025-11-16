@@ -83,62 +83,107 @@ export function AddExpenseDialog({
     setLoading(true);
 
     try {
+      console.log("=== Add Expense Submission Started ===");
+      console.log("Step 1 - Raw amount input:", amount);
+      
       const totalAmount = parseFloat(amount);
+      console.log("Step 2 - Parsed amount:", totalAmount);
+      console.log("Step 3 - Is valid number:", !isNaN(totalAmount));
+      console.log("Step 4 - Is positive:", totalAmount > 0);
+      
       if (isNaN(totalAmount) || totalAmount <= 0) {
+        console.error("Step 5 - Amount validation failed");
         toast({
           title: "Invalid amount",
-          description: "Please enter a valid amount",
+          description: "Please enter a valid amount greater than 0",
           variant: "destructive",
         });
+        setLoading(false);
         return;
       }
+      
+      if (totalAmount > 999999999.99) {
+        console.error("Step 5 - Amount too large");
+        toast({
+          title: "Amount too large",
+          description: "Please enter an amount less than 999,999,999.99",
+          variant: "destructive",
+        });
+        setLoading(false);
+        return;
+      }
+      
+      console.log("Step 6 - Amount validation passed");
 
       // Calculate splits based on type
       let finalSplits: { userId: string; amount: number }[] = [];
 
+      console.log("Step 7 - Split type:", splitType);
+      
       if (splitType === "equal") {
+        console.log("Step 8 - Calculating equal splits");
         finalSplits = calculateEqualSplits().map((s) => ({
           userId: s.userId,
           amount: parseFloat(s.amount),
         }));
+        console.log("Step 9 - Equal splits calculated:", finalSplits);
       } else if (splitType === "percentage") {
+        console.log("Step 8 - Calculating percentage splits");
         const totalPercentage = splits.reduce(
           (sum, s) => sum + parseFloat(s.value || "0"),
           0
         );
+        console.log("Step 9 - Total percentage:", totalPercentage);
         if (Math.abs(totalPercentage - 100) > 0.01) {
+          console.error("Step 10 - Percentage validation failed");
           toast({
             title: "Invalid percentages",
             description: "Percentages must add up to 100%",
             variant: "destructive",
           });
+          setLoading(false);
           return;
         }
         finalSplits = splits.map((s) => ({
           userId: s.userId,
           amount: (totalAmount * parseFloat(s.value)) / 100,
         }));
+        console.log("Step 11 - Percentage splits calculated:", finalSplits);
       } else {
+        console.log("Step 8 - Calculating amount splits");
         // amount type
         const totalSplit = splits.reduce(
           (sum, s) => sum + parseFloat(s.value || "0"),
           0
         );
+        console.log("Step 9 - Total split amount:", totalSplit, "Expected:", totalAmount);
         if (Math.abs(totalSplit - totalAmount) > 0.01) {
+          console.error("Step 10 - Amount split validation failed");
           toast({
             title: "Invalid amounts",
             description: "Split amounts must equal the total amount",
             variant: "destructive",
           });
+          setLoading(false);
           return;
         }
         finalSplits = splits.map((s) => ({
           userId: s.userId,
           amount: parseFloat(s.value),
         }));
+        console.log("Step 11 - Amount splits calculated:", finalSplits);
       }
 
       // Create expense
+      console.log("Step 12 - Creating expense with data:", {
+        group_id: groupId,
+        name,
+        amount: totalAmount,
+        paid_by: paidBy,
+        expense_date: expenseDate,
+        split_type: splitType,
+      });
+      
       const { data: expense, error: expenseError } = await supabase
         .from("expenses")
         .insert({
@@ -152,31 +197,45 @@ export function AddExpenseDialog({
         .select()
         .single();
 
-      if (expenseError) throw expenseError;
+      if (expenseError) {
+        console.error("Step 13 - Expense creation error:", expenseError);
+        throw expenseError;
+      }
+      
+      console.log("Step 14 - Expense created successfully:", expense);
 
       // Create splits
+      const splitsToInsert = finalSplits.map((s) => ({
+        expense_id: expense.id,
+        user_id: s.userId,
+        amount: s.amount,
+      }));
+      
+      console.log("Step 15 - Inserting splits:", splitsToInsert);
+      
       const { error: splitsError } = await supabase
         .from("expense_splits")
-        .insert(
-          finalSplits.map((s) => ({
-            expense_id: expense.id,
-            user_id: s.userId,
-            amount: s.amount,
-          }))
-        );
+        .insert(splitsToInsert);
 
-      if (splitsError) throw splitsError;
+      if (splitsError) {
+        console.error("Step 16 - Splits creation error:", splitsError);
+        throw splitsError;
+      }
+      
+      console.log("Step 17 - Splits created successfully");
 
       toast({
         title: "Expense added",
         description: "The expense has been successfully added.",
       });
+      
+      console.log("=== Expense Creation Completed Successfully ===");
 
       resetForm();
       setOpen(false);
       onExpenseAdded();
     } catch (error) {
-      console.error("Error adding expense:", error);
+      console.error("=== Expense Creation Error ===", error);
       toast({
         title: "Error",
         description: "Failed to add expense. Please try again.",
@@ -240,9 +299,14 @@ export function AddExpenseDialog({
                 id="amount"
                 type="number"
                 step="0.01"
+                min="0.01"
+                max="999999999.99"
                 placeholder="0.00"
                 value={amount}
-                onChange={(e) => setAmount(e.target.value)}
+                onChange={(e) => {
+                  console.log("Amount input changed:", e.target.value);
+                  setAmount(e.target.value);
+                }}
                 required
               />
             </div>
