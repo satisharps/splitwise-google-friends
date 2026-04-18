@@ -1,22 +1,28 @@
 import { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { supabase } from "@/integrations/supabase/client";
+import { Loader2 } from "lucide-react";
+import { consumePendingReturnUrl, useAuthSession } from "@/hooks/use-auth-session";
 
 const Index = () => {
   const navigate = useNavigate();
+  const { user, isReady } = useAuthSession();
 
   useEffect(() => {
-    // Check if user is authenticated
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      if (session) {
-        navigate("/dashboard");
-      } else {
-        navigate("/auth");
-      }
-    });
-  }, [navigate]);
+    if (!isReady) return;
 
-  return null;
+    if (user) {
+      navigate(consumePendingReturnUrl(), { replace: true });
+      return;
+    }
+
+    navigate("/auth", { replace: true });
+  }, [isReady, navigate, user]);
+
+  return (
+    <div className="flex min-h-screen items-center justify-center bg-background">
+      <Loader2 className="h-8 w-8 animate-spin text-primary" />
+    </div>
+  );
 };
 
 export default Index;

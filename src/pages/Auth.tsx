@@ -1,77 +1,52 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { supabase } from "@/integrations/supabase/client";
 import { lovable } from "@/integrations/lovable";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
+import { consumePendingReturnUrl, normalizeReturnUrl, setPendingReturnUrl, useAuthSession } from "@/hooks/use-auth-session";
 import { Loader2 } from "lucide-react";
 
 const Auth = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
+  const { user, isReady } = useAuthSession();
   const [loading, setLoading] = useState(false);
+  const returnUrl = useMemo(() => {
+    const params = new URLSearchParams(window.location.search);
+    return normalizeReturnUrl(params.get("returnUrl"));
+  }, []);
 
   useEffect(() => {
-    console.log("Auth component mounted");
-    
-    // Get return URL from query params
-    const params = new URLSearchParams(window.location.search);
-    const returnUrl = params.get("returnUrl") || "/";
-    console.log("Return URL:", returnUrl);
+    setPendingReturnUrl(returnUrl);
+  }, [returnUrl]);
 
-    // Check if user is already logged in
-    console.log("Checking for existing session...");
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      console.log("Existing session:", session ? "Found" : "None");
-      if (session) {
-        console.log("Navigating to:", returnUrl);
-        navigate(returnUrl);
-      }
-    });
+  useEffect(() => {
+    if (!isReady || !user) return;
 
-    // Listen for auth state changes
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
-      console.log("Auth state change - Event:", event, "Session:", session ? "Present" : "None");
-      if (session) {
-        console.log("Navigating to:", returnUrl);
-        navigate(returnUrl);
-      }
-    });
-
-    return () => subscription.unsubscribe();
-  }, [navigate]);
+    navigate(consumePendingReturnUrl(returnUrl), { replace: true });
+  }, [isReady, navigate, returnUrl, user]);
 
   const handleGoogleSignIn = async () => {
     try {
-      console.log("=== Google Sign-In Started (Managed OAuth) ===");
       setLoading(true);
-
-      const params = new URLSearchParams(window.location.search);
-      const returnUrl = (params.get("returnUrl") || "/").trim();
-      const redirectTo = window.location.origin;
-      console.log("OAuth origin:", redirectTo, "Return URL after login:", returnUrl);
+      setPendingReturnUrl(returnUrl);
 
       const result = await lovable.auth.signInWithOAuth("google", {
-        redirect_uri: redirectTo,
+        redirect_uri: window.location.origin,
         extraParams: {
           prompt: "select_account",
         },
       });
 
       if (result.error) {
-        console.error("OAuth error:", result.error);
         throw result.error;
       }
 
       if (result.redirected) {
-        console.log("Redirecting to Google...");
         return;
       }
-
-      console.log("Sign-in completed, session set.");
     } catch (error: any) {
-      console.error("=== Sign-In Error ===", error);
       toast({
         title: "Error signing in",
         description: error.message,
@@ -112,7 +87,7 @@ const Auth = () => {
         <CardContent className="space-y-3 md:space-y-4 p-4 md:p-6">
           <Button
             onClick={handleGoogleSignIn}
-            disabled={loading}
+            disabled={loading || !isReady}
             size="lg"
             className="w-full bg-primary hover:bg-primary/90 text-primary-foreground font-medium transition-all duration-200 text-sm md:text-base"
           >

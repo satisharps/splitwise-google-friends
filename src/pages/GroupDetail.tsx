@@ -7,6 +7,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { useToast } from "@/hooks/use-toast";
+import { useAuthSession } from "@/hooks/use-auth-session";
 import { ArrowLeft, Loader2, Users, Link2, Copy, TrendingUp } from "lucide-react";
 import { SettlementSummary } from "@/components/SettlementSummary";
 import { AddExpenseDialog } from "@/components/AddExpenseDialog";
@@ -16,7 +17,7 @@ const GroupDetail = () => {
   const { groupId } = useParams();
   const navigate = useNavigate();
   const { toast } = useToast();
-  const [user, setUser] = useState<any>(null);
+  const { user, isReady } = useAuthSession();
   const [group, setGroup] = useState<any>(null);
   const [invitations, setInvitations] = useState<any[]>([]);
   const [members, setMembers] = useState<any[]>([]);
@@ -27,15 +28,12 @@ const GroupDetail = () => {
   const [showSettlements, setShowSettlements] = useState(false);
 
   useEffect(() => {
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      if (!session) {
-        // Redirect to auth with return URL
-        navigate(`/auth?returnUrl=/group/${groupId}`);
-      } else {
-        setUser(session.user);
-      }
-    });
-  }, [navigate, groupId]);
+    if (!isReady) return;
+
+    if (!user) {
+      navigate(`/auth?returnUrl=/group/${groupId}`, { replace: true });
+    }
+  }, [groupId, isReady, navigate, user]);
 
   const fetchGroupData = async (isRetry = false) => {
     try {
@@ -194,11 +192,11 @@ const GroupDetail = () => {
   };
 
   useEffect(() => {
-    if (user && groupId) {
+    if (isReady && user && groupId) {
       fetchGroupData();
       fetchExpenses();
     }
-  }, [user, groupId]);
+  }, [groupId, isReady, user]);
 
   const handleCopyInviteLink = () => {
     const inviteLink = `${window.location.origin}/group/${groupId}`;
@@ -268,7 +266,7 @@ const GroupDetail = () => {
     }
   }, [user, pendingInvitation, loading]);
 
-  if (!user || loading) {
+  if (!isReady || !user || loading) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-background via-accent/10 to-background">
         <Header user={user} />
