@@ -4,34 +4,22 @@ import { supabase } from "@/integrations/supabase/client";
 import Header from "@/components/Header";
 import CreateGroupDialog from "@/components/CreateGroupDialog";
 import GroupCard from "@/components/GroupCard";
+import { useAuthSession } from "@/hooks/use-auth-session";
 import { Loader2 } from "lucide-react";
 
 const Dashboard = () => {
   const navigate = useNavigate();
-  const [user, setUser] = useState<any>(null);
+  const { user, isReady } = useAuthSession();
   const [groups, setGroups] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // Check authentication
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      if (!session) {
-        navigate("/auth?returnUrl=/dashboard");
-      } else {
-        setUser(session.user);
-      }
-    });
+    if (!isReady) return;
 
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
-      if (!session) {
-        navigate("/auth?returnUrl=/dashboard");
-      } else {
-        setUser(session.user);
-      }
-    });
-
-    return () => subscription.unsubscribe();
-  }, [navigate]);
+    if (!user) {
+      navigate("/auth?returnUrl=/dashboard", { replace: true });
+    }
+  }, [isReady, navigate, user]);
 
   const fetchGroups = async () => {
     try {
@@ -55,13 +43,17 @@ const Dashboard = () => {
   };
 
   useEffect(() => {
-    if (user) {
+    if (isReady && user) {
       fetchGroups();
     }
-  }, [user]);
+  }, [isReady, user]);
 
-  if (!user) {
-    return null;
+  if (!isReady || !user) {
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-background">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      </div>
+    );
   }
 
   return (
