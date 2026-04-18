@@ -49,11 +49,14 @@ const Auth = () => {
 
       const params = new URLSearchParams(window.location.search);
       const returnUrl = (params.get("returnUrl") || "/").trim();
-      const redirectTo = `${window.location.origin}${returnUrl}`;
-      console.log("Redirect URI:", redirectTo);
+      const redirectTo = window.location.origin;
+      console.log("OAuth origin:", redirectTo, "Return URL after login:", returnUrl);
 
       const result = await lovable.auth.signInWithOAuth("google", {
         redirect_uri: redirectTo,
+        extraParams: {
+          prompt: "select_account",
+        },
       });
 
       if (result.error) {
