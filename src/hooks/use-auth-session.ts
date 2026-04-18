@@ -1,8 +1,15 @@
-import { useEffect, useState } from "react";
+import { createContext, useContext, useEffect, useMemo, useState, type ReactNode } from "react";
 import type { User } from "@supabase/supabase-js";
 import { supabase } from "@/integrations/supabase/client";
 
 const AUTH_RETURN_URL_KEY = "split-ease:return-url";
+
+type AuthSessionContextValue = {
+  user: User | null;
+  isReady: boolean;
+};
+
+const AuthSessionContext = createContext<AuthSessionContextValue | undefined>(undefined);
 
 export const normalizeReturnUrl = (value?: string | null, fallback = "/dashboard") => {
   if (!value || !value.startsWith("/")) {
@@ -26,23 +33,29 @@ export const consumePendingReturnUrl = (fallback = "/dashboard") => {
   return normalizeReturnUrl(value, fallback);
 };
 
-export const useAuthSession = () => {
+export const AuthSessionProvider = ({ children }: { children: ReactNode }) => {
   const [user, setUser] = useState<User | null>(null);
   const [isReady, setIsReady] = useState(false);
 
   useEffect(() => {
     let isMounted = true;
 
-    const {
-      data: { subscription },
-    } = supabase.auth.onAuthStateChange((_event, session) => {
+    const initializeAuth = async () => {
+      const {
+        data: { session },
+      } = await supabase.auth.getSession();
+
       if (!isMounted) return;
 
       setUser(session?.user ?? null);
       setIsReady(true);
-    });
+    };
 
-    supabase.auth.getSession().then(({ data: { session } }) => {
+    void initializeAuth();
+
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange((_event, session) => {
       if (!isMounted) return;
 
       setUser(session?.user ?? null);
@@ -55,5 +68,17 @@ export const useAuthSession = () => {
     };
   }, []);
 
-  return { user, isReady };
+  const value = useMemo(() => ({ user, isReady }), [user, isReady]);
+
+  return <AuthSessionContext.Provider value={value}>{children}</AuthSessionContext.Provider>;
+};
+
+export const useAuthSession = () => {
+  const context = useContext(AuthSessionContext);
+
+  if (!context) {
+    throw new Error("useAuthSession must be used within an AuthSessionProvider");
+  }
+
+  return context;
 };
