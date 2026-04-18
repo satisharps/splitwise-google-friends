@@ -44,32 +44,29 @@ const Auth = () => {
 
   const handleGoogleSignIn = async () => {
     try {
-      console.log("=== Google Sign-In Started ===");
+      console.log("=== Google Sign-In Started (Managed OAuth) ===");
       setLoading(true);
-      
+
       const params = new URLSearchParams(window.location.search);
       const returnUrl = (params.get("returnUrl") || "/").trim();
-      console.log("Step 1 - Return URL:", returnUrl);
-      
-      const redirectTo = `${window.location.origin.trim()}${returnUrl}`;
-      console.log("Step 2 - Full redirect URL:", redirectTo);
-      console.log("Step 3 - Redirect URL length:", redirectTo.length);
-      console.log("Step 4 - Redirect URL contains whitespace:", /\s/.test(redirectTo));
-      
-      console.log("Step 5 - Calling supabase.auth.signInWithOAuth...");
-      const { error } = await supabase.auth.signInWithOAuth({
-        provider: "google",
-        options: {
-          redirectTo: redirectTo,
-        },
+      const redirectTo = `${window.location.origin}${returnUrl}`;
+      console.log("Redirect URI:", redirectTo);
+
+      const result = await lovable.auth.signInWithOAuth("google", {
+        redirect_uri: redirectTo,
       });
 
-      if (error) {
-        console.error("Step 6 - OAuth Error:", error);
-        throw error;
+      if (result.error) {
+        console.error("OAuth error:", result.error);
+        throw result.error;
       }
-      
-      console.log("Step 7 - OAuth call successful, redirecting to Google...");
+
+      if (result.redirected) {
+        console.log("Redirecting to Google...");
+        return;
+      }
+
+      console.log("Sign-in completed, session set.");
     } catch (error: any) {
       console.error("=== Sign-In Error ===", error);
       toast({
