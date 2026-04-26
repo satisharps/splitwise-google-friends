@@ -1,7 +1,8 @@
+import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
-import { LogOut, User } from "lucide-react";
+import { LogOut, Trash2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import {
   DropdownMenu,
@@ -12,6 +13,16 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 
 interface HeaderProps {
   user: any;
@@ -20,6 +31,8 @@ interface HeaderProps {
 const Header = ({ user }: HeaderProps) => {
   const navigate = useNavigate();
   const { toast } = useToast();
+  const [confirmOpen, setConfirmOpen] = useState(false);
+  const [deleting, setDeleting] = useState(false);
 
   const handleSignOut = async () => {
     const { error } = await supabase.auth.signOut();
@@ -31,6 +44,30 @@ const Header = ({ user }: HeaderProps) => {
       });
     } else {
       navigate("/auth");
+    }
+  };
+
+  const handleDeleteAccount = async () => {
+    try {
+      setDeleting(true);
+      const { error } = await supabase.functions.invoke("delete-account");
+      if (error) throw error;
+
+      toast({
+        title: "Account deleted",
+        description: "Your account and data have been permanently removed.",
+      });
+      await supabase.auth.signOut();
+      navigate("/auth", { replace: true });
+    } catch (err: any) {
+      toast({
+        title: "Error deleting account",
+        description: err.message ?? "Something went wrong. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setDeleting(false);
+      setConfirmOpen(false);
     }
   };
 
@@ -78,13 +115,45 @@ const Header = ({ user }: HeaderProps) => {
               </div>
             </DropdownMenuLabel>
             <DropdownMenuSeparator />
-            <DropdownMenuItem onClick={handleSignOut} className="text-destructive focus:text-destructive cursor-pointer">
+            <DropdownMenuItem onClick={handleSignOut} className="cursor-pointer">
               <LogOut className="mr-2 h-4 w-4" />
               <span>Sign out</span>
+            </DropdownMenuItem>
+            <DropdownMenuSeparator />
+            <DropdownMenuItem
+              onClick={() => setConfirmOpen(true)}
+              className="text-destructive focus:text-destructive cursor-pointer"
+            >
+              <Trash2 className="mr-2 h-4 w-4" />
+              <span>Delete account</span>
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
       </div>
+
+      <AlertDialog open={confirmOpen} onOpenChange={setConfirmOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete your account?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This permanently deletes your account, all groups you created, your expenses, settlements, and profile data. This action cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={deleting}>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={(e) => {
+                e.preventDefault();
+                handleDeleteAccount();
+              }}
+              disabled={deleting}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              {deleting ? "Deleting..." : "Yes, delete my account"}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </header>
   );
 };
