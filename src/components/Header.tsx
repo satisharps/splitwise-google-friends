@@ -2,7 +2,7 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
-import { LogOut, Trash2 } from "lucide-react";
+import { LogOut, Trash2, Shield } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import {
   DropdownMenu,
@@ -115,6 +115,10 @@ const Header = ({ user }: HeaderProps) => {
               </div>
             </DropdownMenuLabel>
             <DropdownMenuSeparator />
+            <DropdownMenuItem onClick={() => navigate("/privacy")} className="cursor-pointer">
+              <Shield className="mr-2 h-4 w-4" />
+              <span>Privacy Policy</span>
+            </DropdownMenuItem>
             <DropdownMenuItem onClick={handleSignOut} className="cursor-pointer">
               <LogOut className="mr-2 h-4 w-4" />
               <span>Sign out</span>
